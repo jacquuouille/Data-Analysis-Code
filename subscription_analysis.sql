@@ -289,3 +289,50 @@ from (
 	group by 
 		1, 2
 ) a
+
+
+-- 1.5. Subscription Churn Over Time (% of the running total of created subscriptions) 
+-- using the final temporary tables 'data_prep', 'fast_churn' and 'churned_users' created in the really first query (1.1. Accounts Breakdown)
+
+(...)
+, churned_all_together as ( 
+	select * from fast_churned 
+	union 
+	select * from churned_users  
+)
+, churned_agg as ( 
+	select 
+		to_char(canceled_date, 'YYYY-MM') as period 
+		, count(distinct customer_id) as churned  
+	from
+		churned_all_together 
+	group by 
+		1  
+)
+, subscribers_based as ( 
+	select 
+		distinct * 
+		, sum(subscribers) over(order by period rows between unbounded preceding and current row) as cumul_subscribers_based
+	from ( 
+		select 
+			to_char(created_date, 'YYYY-MM') as period 
+			, count(distinct customer_id) as subscribers  
+		from
+			data_prep 
+		group by 
+			1 
+	) a
+)
+
+select 
+	distinct t1.period 
+	, t2.churned 
+	, t1.cumul_subscribers_based
+	, round(100.0*t2.churned / t1.cumul_subscribers_based, 1) as pct_churn
+from
+	subscribers_based t1 
+join 
+	churned_agg t2
+	on t1.period = t2.period
+order by 
+	1
