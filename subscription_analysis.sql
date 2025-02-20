@@ -23,7 +23,7 @@ ALTER TABLE IF EXISTS public.streaming_data
 ----------------
 
 -- 1.1. Distribution of Subscribers per Category, based on their last status
--- after quickly cleaning the data (step 0), we're going to create a category dimension refering to the status of each subscriber based on their last status in the program (1). finally, we'll gather all the created categories all together and aggregate the the results (2).
+-- after quickly cleaning the data (step 0), we're going to create a category dimension refering to the status of each subscriber based on their last status in the program (1). finally, we'll gather all the created categories and aggregate them by counting the number of subscribers in each (2).
 -- (see glossary for categories' definition)
 
 -- (0)
@@ -131,7 +131,7 @@ data_prep as (
 	union 
 	select * from recovered_users
 )
-	select 
+select 
 	category 
 	, count(distinct customer_id) as accounts
 from 
