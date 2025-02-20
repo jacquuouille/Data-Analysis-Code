@@ -102,7 +102,7 @@ data_prep as (
 	where
 		nb_activity_event = 1
 		and canceled_date is null 
-		and to_char(created_date, 'YYYY-MM') != '2023-09'  
+		and to_char(created_date, 'YYYY-MM') != '2023-09' -- otherwise is null 
 ) 
 , recovered_users as (
 	select
