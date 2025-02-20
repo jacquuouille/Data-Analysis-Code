@@ -24,8 +24,9 @@ ALTER TABLE IF EXISTS public.streaming_data
 
 
 -- 1.1. Distribution of subscribers per category, based on their last status
--- see glassary for category's definition
+-- after quickly cleaning the data (step 0), we're going to create a category dimension refering to the status of each subscribers based on their last status in the program (1). finally, we'll aggregate results all together (2).
 
+-- (0)
 with
 data_prep as ( 
 	select
@@ -45,6 +46,7 @@ data_prep as (
 	from 
 		streaming_data
 )
+-- (1)
 , fast_churn as ( 
 	select 
 		distinct 'fast_churned' as category
@@ -128,6 +130,7 @@ data_prep as (
 	union 
 	select * from recovered_users
 )
+-- (2)
 select 
 	category 
 	, count(distinct customer_id) as accounts
