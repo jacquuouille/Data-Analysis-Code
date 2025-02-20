@@ -24,6 +24,7 @@ ALTER TABLE IF EXISTS public.streaming_data
 
 -- 1.1. Distribution of subscribers per category, based on their last status
 -- after quickly cleaning the data (step 0), we're going to create a category dimension refering to the status of each subscribers based on their last status in the program (1). finally, we'll aggregate results all together (2).
+-- (see glossary for categories' definition)
 
 -- (0)
 with
