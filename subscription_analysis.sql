@@ -148,7 +148,7 @@ order by
 
 
 -- 1.2. Active Accounts Over Time (from the date subscribers joined for the first time, regardless of whether they were later recovered)
--- using the temporary tables 'data_prep', 'new_users', 'reccuring_users' and 'recovered_users' created in the previous query
+-- using the temporary tables 'data_prep', 'new_users', 'reccuring_users' and 'recovered_users' created in the previous query (1.1. Accounts Breakdown)
 
 (...)
 , active_subscribers as (
@@ -174,7 +174,7 @@ order by
 
 	
 -- 1.3. Subscriber Tenure Distribution (from the date subscribers stayed active for the last time (only the reactivation date of recovered accounts will be taken into account)
--- using the temporary tables 'data_prep', 'fast_churn', 'churned_users', 'new_users', 'reccuring_users' and 'recovered_users' created in the previous query
+-- using the temporary tables 'data_prep', 'fast_churn', 'churned_users', 'new_users', 'reccuring_users' and 'recovered_users' created in the really first query (1.1. Accounts Breakdown)
 
 (...)
 , inactive_subscribers as ( 
@@ -268,4 +268,24 @@ from (
 		month_tenure 
 	group by 
 		1  
+) a
+
+
+-- 1.4. Subscriber Tenure Trends by Engagement Status (from the date subscribers stayed active for the last time (only the reactivation date of recovered accounts will be taken into account)
+-- using the final temporary table 'month_tenure' created in the previous query (1.3. Subscriber Tenure Distribution)
+
+(...)
+select 
+	distinct *
+	, sum(accounts) over(partition by main_category order by month_tenure_bis rows between unbounded preceding and current row) as cumul_accounts
+	, round(100.0*sum(accounts) over(partition by main_category order by month_tenure_bis rows between unbounded preceding and current row) / sum(accounts) over(partition by main_category), 1) as prop_cumul_accounts
+from (
+	select 
+		main_category
+		, month_tenure_bis
+		, count(distinct customer_id) as accounts 
+	from 
+		month_tenure 
+	group by 
+		1, 2
 ) a
