@@ -258,8 +258,8 @@ order by
 ) 
 select 
 	distinct *
-	, sum(accounts) over(order by month_tenure_bis rows between unbounded preceding and current row) as cumulative_accounts
-	, round(100.0*sum(accounts) over(order by month_tenure_bis rows between unbounded preceding and current row) / sum(accounts) over(), 1) as prop_cumulative_accounts
+	, sum(accounts) over(order by month_tenure_bis rows between unbounded preceding and current row) as cumul_accounts
+	, round(100.0*sum(accounts) over(order by month_tenure_bis rows between unbounded preceding and current row) / sum(accounts) over(), 1) as prop_cumul_accounts
 from (
 	select 
 		real_month_tenure
