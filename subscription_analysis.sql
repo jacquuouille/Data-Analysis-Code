@@ -197,7 +197,7 @@ order by
 , first_touch as (
 	select 
 		t1.customer_id
-		-- for recovered accounts, we need to take into account the date they subscribed again (tenure is from their last active subscription, and not from when they subscribes to the plan for the first time)
+		-- for recovered accounts, we need to take into account the date they subscribed again (tenure is from their last active subscription, and not from when they subscribed to the plan for the first time)
 		, case 
 			when t2.category = 'recovered' then t3.created_date else t1.created_date  
 		  end as first_touch_date
@@ -243,9 +243,9 @@ order by
 		on t1.customer_id = t2.customer_id 
 ) 
 , month_tenure as ( 
--- As we assume that subscriptions always starts from the 1st day of the month and end on the last day of the month, with renewals occuring on the 1st day of the following month, we need to change the 'month_tenure' value from 0 to 1 for reccuring accounts and subscribers who canceled in the month immediately following their subscription. 
--- e.g., reccuring subscriber '116156335' signing-up August 14, 2023 and cancelling on September 8, 2023 
--- e.g., churned  subscriber '123169152' signing-up December 10, 2022 and cancelling on January 1, 2023 
+-- As we assume that subscriptions always starts from the 1st day of the month and end on the last day of that month, with renewals occuring on the 1st day of the following month, we need to change the 'month_tenure' value from 0 to 1 for reccuring accounts and subscribers who canceled in the month after signing-up.
+-- e.g., reccuring subscriber '116156335' signing-up August 14, 2023 
+-- e.g., churned   subscriber '123169152' signing-up December 10, 2022 and cancelling on January 1, 2023 
 	select 
 		* 
 		, case 
