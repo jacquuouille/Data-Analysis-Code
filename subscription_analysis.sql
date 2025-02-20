@@ -27,7 +27,7 @@ ALTER TABLE IF EXISTS public.streaming_data
 -- 1. DATA ANALYSIS
 ----------------
 
--- 1.1. Distribution of Subscribers per Category
+-- 1.1. Accounts Breakdown (Subscriber-based (as of 2023-09)
 -- after quickly cleaning the data (step 0), we're going to create a category dimension refering to the status of each subscriber based on their last status in the program (1). finally, we'll gather all the created categories and aggregate them by counting the number of subscribers in each (2).
 -- (see glossary for categories' definition)
 
