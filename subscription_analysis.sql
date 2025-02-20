@@ -243,7 +243,7 @@ order by
 		on t1.customer_id = t2.customer_id 
 ) 
 , month_tenure as ( 
--- As we assume that subscriptions always starts from the 1st day of the month and end on the last day of that month, with renewals occuring on the 1st day of the following month, we need to change the 'month_tenure' value from 0 to 1 for reccuring accounts and subscribers who canceled in the month after signing-up.
+-- As we assume that subscriptions always starts from the 1st day of the month and end on the last day of that same month, with renewals occuring on the 1st day of the following month, we need to change the 'month_tenure' value from 0 to 1 for reccuring accounts and subscribers who canceled in the month after signing-up.
 -- e.g., reccuring subscriber '116156335' signing-up August 14, 2023 
 -- e.g., churned   subscriber '123169152' signing-up December 10, 2022 and cancelling on January 1, 2023 
 	select 
