@@ -22,7 +22,7 @@ ALTER TABLE IF EXISTS public.streaming_data
 -- 1. DATA ANALYSIS
 ----------------
 
--- 1.1. Distribution of Subscribers per Category, based on their last status
+-- 1.1. Distribution of Subscribers per Category
 -- after quickly cleaning the data (step 0), we're going to create a category dimension refering to the status of each subscriber based on their last status in the program (1). finally, we'll gather all the created categories and aggregate them by counting the number of subscribers in each (2).
 -- (see glossary for categories' definition)
 
@@ -140,3 +140,29 @@ group by
 	1 
 order by 
 	1 desc
+
+
+-- 1.2. Active Accounts Over Time  
+-- using the temporary tables 'data_prep', 'new_users', 'reccuring_users' and 'recovered_users' created in the previous query
+
+(...)
+, active_subscribers as (
+	select * from new_users 
+	union 
+	select * from reccuring_users 
+	union 
+	select * from recovered_users
+)
+select 
+	to_char(t1.created_date, 'YYYY-MM') as period 
+	, count(distinct t1.customer_id) as subscribers_joined
+	, count(distinct t2.customer_id) as subscribers_joined_active
+from 
+	data_prep t1 
+join 
+	active_subscribers t2 
+	on to_char(t1.created_date, 'YYYY-MM') = to_char(t2.created_date, 'YYYY-MM')
+group by 
+	1 
+order by 
+	1 
