@@ -2,6 +2,8 @@
 -- 0. DATA IMPORTATION 
 ---------------
 
+-- 0.1. Creation of the table 
+
 CREATE TABLE IF NOT EXISTS public.streaming_data
 (
     customer_id text COLLATE pg_catalog."default" NOT NULL,
@@ -16,6 +18,9 @@ TABLESPACE pg_default;
 
 ALTER TABLE IF EXISTS public.streaming_data
     OWNER to postgres;
+
+
+-- 0.2. Insertion of the data using the .csv file
 
 
 ----------------
