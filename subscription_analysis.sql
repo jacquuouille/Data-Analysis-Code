@@ -386,5 +386,105 @@ from (
 order by 
 	1
 -- Nearly all subscribers who have churned have paid their subscription, wheareas more than 30% of fast-churned did not, suggesting that their lack of payment could be the reason for their cancellation	
-	
-	
+
+
+-- 1.7. Cohort Analysis (including Fast-Churn)
+-- using the final temporary table 'data_prep' created in the really first query (1.1. Accounts Breakdown)
+
+(...)
+, calendar_month as (
+    select
+        	t1.customer_id
+        	, generate_series(t1.created_date::date, coalesce(t1.canceled_date, '2023-09-30')::date,'1 month'::interval)::date as month_date -- generate a series of months for each subscriber based on their created_date to canceled_date; using '2023-09-30' as canceled_date for active accounts as it's the last date we have in the dataset
+    from 
+        	data_prep t1 
+) 
+, cohort_buckets as ( 
+	select 
+		customer_id
+		, cast(date_trunc('month', min(created_date)) as date) as cohort_month
+	from
+		data_prep
+	group by
+		1
+)  
+, churn_buckets as ( 
+	select 
+		customer_id 
+		, max(canceled_date) as last_touch 
+	from
+		data_prep
+	where 
+		last_activity_event = 1
+	group by
+		1
+) 
+, user_details as ( 
+	select 
+		distinct t1.customer_id 
+		, cast(date_trunc('month', t1.month_date) as date) as month_date
+		, cast(date_trunc('month', t2.cohort_month) as date) as cohort_month
+		, cast(date_trunc('month', t3.last_touch_real) as date) as last_month
+		, case 
+			when cast(date_trunc('month', t1.month_date) as date) = cast(date_trunc('month', t3.last_touch) as date) then 'churn'
+			else 'active'
+			end 
+		  as user_type 
+	from 
+		calendar_month t1 
+	left join 
+		cohort_buckets t2 
+		on t1.customer_id = t2.customer_id 
+	left join 
+		churn_buckets t3
+		on t1.customer_id = t3.customer_id 
+) 
+, customer_activity as (
+	select 
+		t1.*
+		, (extract(year from t1.month_date) - extract(year from t2.cohort_month)) * 12 -- calculates the difference in years * converts the year difference into months
+		  + (extract(month from t1.month_date) - extract(month from t2.cohort_month)) as month_retained -- adds the difference in months.
+	from 
+		user_details t1
+	join 
+		cohort_buckets t2 
+		on t1.customer_id = t2.customer_id 
+	where 
+		user_type != 'churn'
+) 
+, cohort_size as (
+	select 
+		cohort_month 
+		, count(distinct customer_id) as nb_users
+	from 
+		cohort_buckets 
+	group by 
+		1
+)
+, retention as (
+	select 
+		t2.cohort_month 
+		, t1.month_retained
+		, count(distinct t1.customer_id) as nb_users 
+	from 
+		customer_activity t1 
+	left join 
+		cohort_buckets t2 
+		on t1.customer_id = t2.customer_id
+	group by 
+		1, 2
+)
+select
+	t1.cohort_month
+	, t1.month_retained 
+	, t2.nb_users as total_accounts
+	, t1.nb_users::float as retained_accounts
+	, t2.nb_users - t1.nb_users as churned_accounts
+	, round(100.0 * t1.nb_users/t2.nb_users, 1) as retention_pct
+from 
+	retention t1 
+left join 
+	cohort_size t2
+	on t1.cohort_month = t2.cohort_month 
+order by 
+	1, 3
