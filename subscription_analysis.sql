@@ -183,8 +183,7 @@ order by
 			data_prep t1 
 		left join 
 			first_touch t2 
-			on t1.customer_id = t2.customer_id
-		-- where t1.customer_id = '116060198' 
+			on t1.customer_id = t2.customer_id 
 	) a
 	where 
 		last_activity_event = 1 
