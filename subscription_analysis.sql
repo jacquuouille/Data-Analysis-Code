@@ -148,29 +148,62 @@ order by
 
 
 -- 1.2. Active Accounts Over Time (from the date subscribers joined for the first time, regardless of whether they were later recovered)
--- using the temporary tables 'data_prep', 'new_users', 'reccuring_users' and 'recovered_users' created in the previous query (1.1. Accounts Breakdown)
+-- using the temporary table 'data_prep' created in the previous query (1.1. Accounts Breakdown) 
 
 (...)
-, active_subscribers as (
-	select * from new_users 
-	union 
-	select * from reccuring_users 
-	union 
-	select * from recovered_users
+, first_touch as ( 
+	select 
+		customer_id
+		, min(to_char(created_date, 'YYYY-MM')) as cohort_month
+	from
+		data_prep
+	group by
+		1
 )
+, subscribers_based as (
+	select 
+		cohort_month as period
+		, count(distinct customer_id) as subscribers_based
+	from 
+		first_touch
+	group by 
+		1
+	order by 
+		1
+)
+, subscribers_active as ( 
+	select 
+		cohort_month as period
+		, count(distinct customer_id) as accounts
+	from ( 
+		select 
+			t1.*
+			, t2.cohort_month 
+		from
+			data_prep t1 
+		left join 
+			first_touch t2 
+			on t1.customer_id = t2.customer_id
+		-- where t1.customer_id = '116060198' 
+	) a
+	where 
+		last_activity_event = 1 
+		and canceled_date is null
+	group by 
+		1
+)
+
 select 
-	to_char(t1.created_date, 'YYYY-MM') as period 
-	, count(distinct t1.customer_id) as subscribers_joined
-	, count(distinct t2.customer_id) as subscribers_joined_active
+	distinct t1.period 
+	, t1.accounts
+	, t2.subscribers_based
 from 
-	data_prep t1 
+	subscribers_active t1 
 join 
-	active_subscribers t2 
-	on to_char(t1.created_date, 'YYYY-MM') = to_char(t2.created_date, 'YYYY-MM')
-group by 
-	1 
+	subscribers_based t2 
+	on t1.period = t2.period 
 order by 
-	1 
+	1
 
 	
 -- 1.3. Subscriber Tenure Distribution (from the date subscribers stayed active for the last time (only the reactivation date of recovered accounts will be taken into account))
