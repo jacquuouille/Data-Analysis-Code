@@ -291,7 +291,7 @@ from (
 ) a
 
 
--- 1.5. Subscription Churn Over Time (% of the running total of created subscriptions) 
+-- 1.5. Cancelled Subscriptions Over Time (% of the running total of created subscriptions) 
 -- using the final temporary table 'data_prep' created in the really first query (1.1. Accounts Breakdown)
 
 (...)
@@ -327,3 +327,32 @@ join
 	on t1.period = t2.period 
 order by 
 	1
+
+
+-- 1.6. Payment Behaviours of Churned Accounts 
+-- using the final temporary tables 'data_prep', 'fast_churn' and 'churned_users' created in the really first query (1.1. Accounts Breakdown)
+
+(...)
+, churned_all_together as ( 
+	select * from fast_churned 
+	union 
+	select * from churned_users  
+) 
+select 
+	distinct *
+	, round(100.0*accounts / sum(accounts) over(partition by category), 2) as accounts_cat 
+from ( 
+	select 
+		category
+		, paid
+		, count(distinct customer_id) as accounts
+	from 
+		churned_all_together
+	group by
+		1, 2 
+) a
+order by 
+	1
+-- Nearly all subscribers who have churned have paid their subscription, wheareas more than 30% of fast-churned did not, suggesting that their lack of payment could be the reason for their cancellation	
+	
+	
