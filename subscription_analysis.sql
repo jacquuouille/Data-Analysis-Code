@@ -323,45 +323,7 @@ from (
 ) a
 
 
--- 1.5. Cancelled Subscriptions Over Time (% of the running total of created subscriptions) 
--- using the final temporary table 'data_prep' created in the really first query (1.1. Accounts Breakdown)
-
-(...)
-, churned_subcriptions as ( 
-	select 
-		to_char(canceled_date, 'YYYY-MM') as period 
-		, count(*) as churned_subscriptions 
-	from
-		data_prep 
-	group by 
-		1 
-)
-, created_subscriptions as ( 
-	select 
-		to_char(created_date, 'YYYY-MM') as period 
-		, count(*) as created_subscriptions 
-		, sum(count(*)) over(order by to_char(created_date, 'YYYY-MM') rows between unbounded preceding and current row) as running_total_created_subscriptions
-	from
-		data_prep 
-	group by 
-		1
-) 
-
-select 
-	distinct t1.period 
-	, t1.churned_subscriptions
-	, t2.running_total_created_subscriptions 
-	, round(100.0*t1.churned_subscriptions / t2.running_total_created_subscriptions, 1) as prop_churned_subscriptions
-from 
-	churned_subcriptions t1 
-join 
-	created_subscriptions t2 
-	on t1.period = t2.period 
-order by 
-	1
-
-
--- 1.6. Payment Behaviours of Churned Accounts 
+-- 1.5. Payment Behaviours of Churned Accounts 
 -- using the final temporary tables 'data_prep', 'fast_churn' and 'churned_users' created in the really first query (1.1. Accounts Breakdown)
 
 (...)
@@ -388,7 +350,7 @@ order by
 -- Nearly all subscribers who have churned have paid their subscription, wheareas more than 30% of fast-churned did not, suggesting that their lack of payment could be the reason for their cancellation	
 
 
--- 1.7. Cohort Analysis (including Fast-Churn)
+-- 1.6. Cohort Analysis (including Fast-Churn)
 -- using the final temporary table 'data_prep' created in the really first query (1.1. Accounts Breakdown)
 
 (...)
