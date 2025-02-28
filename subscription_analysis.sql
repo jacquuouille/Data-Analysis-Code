@@ -442,7 +442,7 @@ select
 	t1.cohort_month
 	, t1.month_retained 
 	, t2.nb_users as total_accounts
-	, t1.nb_users::float as retained_accounts
+	, t1.nb_users as retained_accounts
 	, t2.nb_users - t1.nb_users as churned_accounts
 	, round(100.0 * t1.nb_users/t2.nb_users, 1) as retention_pct
 from 
