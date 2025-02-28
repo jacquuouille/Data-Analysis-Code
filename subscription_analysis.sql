@@ -266,7 +266,7 @@ order by
 		, t1.main_category
 		, t1.category
 		, t1.first_touch_date
-		, coalesce(t2.last_touch_date, '2023-09-08') as last_touch_date
+		, coalesce(t2.last_touch_date, '2023-09-08') as last_touch_date -- using the last date of the data set as the last touch
 		, extract(month from age(coalesce(t2.last_touch_date, '2023-09-08'), t1.first_touch_date)) as month_tenure 
 	from 
 		first_touch t1 
@@ -290,8 +290,8 @@ order by
 ) 
 select 
 	distinct *
-	, sum(accounts) over(order by month_tenure_bis rows between unbounded preceding and current row) as cumul_accounts
-	, round(100.0*sum(accounts) over(order by month_tenure_bis rows between unbounded preceding and current row) / sum(accounts) over(), 1) as prop_cumul_accounts
+	, sum(accounts) over(order by real_month_tenure rows between unbounded preceding and current row) as cumul_accounts
+	, round(100.0*sum(accounts) over(order by real_month_tenure rows between unbounded preceding and current row) / sum(accounts) over(), 1) as prop_cumul_accounts
 from (
 	select 
 		real_month_tenure
