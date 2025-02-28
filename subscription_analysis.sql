@@ -355,7 +355,7 @@ order by
 
 (...)
 , calendar_month as (
-    -- generate a series of months for each subscriber based on their created_date to canceled_date; using '2023-09-30' as canceled_date for active accounts as it's the last date we have in the dataset
+    -- generate a series of months for each subscriber based on their created_date to their canceled_date; using '2023-09-30' as canceled_date for active accounts as it's the last date we have in the dataset
     select
         	t1.customer_id
         	, generate_series(t1.created_date::date, coalesce(t1.canceled_date, '2023-09-30')::date,'1 month'::interval)::date as month_date 
@@ -405,6 +405,7 @@ order by
 , customer_activity as (
 	select 
 		t1.*
+		-- as date_diff() function doesn't exist in PostgreSQL, we have to proceed diffently as below:
 		, (extract(year from t1.month_date) - extract(year from t2.cohort_month)) * 12 -- calculates the difference in years * converts the year difference into months
 		  + (extract(month from t1.month_date) - extract(month from t2.cohort_month)) as month_retained -- adds the difference in months.
 	from 
