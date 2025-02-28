@@ -355,9 +355,10 @@ order by
 
 (...)
 , calendar_month as (
+    -- generate a series of months for each subscriber based on their created_date to canceled_date; using '2023-09-30' as canceled_date for active accounts as it's the last date we have in the dataset
     select
         	t1.customer_id
-        	, generate_series(t1.created_date::date, coalesce(t1.canceled_date, '2023-09-30')::date,'1 month'::interval)::date as month_date -- generate a series of months for each subscriber based on their created_date to canceled_date; using '2023-09-30' as canceled_date for active accounts as it's the last date we have in the dataset
+        	, generate_series(t1.created_date::date, coalesce(t1.canceled_date, '2023-09-30')::date,'1 month'::interval)::date as month_date 
     from 
         	data_prep t1 
 ) 
