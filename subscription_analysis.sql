@@ -266,8 +266,8 @@ order by
 		, t1.main_category
 		, t1.category
 		, t1.first_touch_date
-		, coalesce(t2.last_touch_date, '2023-09-08') as last_touch_date -- using the last date of the data set as the last touch
-		, extract(month from age(coalesce(t2.last_touch_date, '2023-09-08'), t1.first_touch_date)) as month_tenure 
+		, coalesce(t2.last_touch_date, '2023-09-30') as last_touch_date -- using the last date of the data set as the last touch
+		, extract(month from age(coalesce(t2.last_touch_date, '2023-09-30'), t1.first_touch_date)) as month_tenure 
 	from 
 		first_touch t1 
 	join 
