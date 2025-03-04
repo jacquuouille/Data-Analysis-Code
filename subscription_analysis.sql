@@ -2,6 +2,7 @@
 -- 0. DATA IMPORTATION 
 ---------------
 
+--
 -- 0.1. Creation of the table 
 
 CREATE TABLE IF NOT EXISTS public.streaming_data
@@ -20,110 +21,208 @@ ALTER TABLE IF EXISTS public.streaming_data
     OWNER to postgres;
 
 
+--
 -- 0.2. Insertion of the data using the .csv file
+
+
+--
+-- 0.3. Creation of the materialized views (see glossary (page 2 in the dashboard) for definitions)
+
+--
+-- 0.3.1. Subscribers Data Materialized View
+-- View: public.subscribers_data
+
+-- DROP MATERIALIZED VIEW IF EXISTS public.subscribers_data;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS public.subscribers_data
+TABLESPACE pg_default
+AS
+ SELECT streaming_data.customer_id,
+    streaming_data.created_date,
+	-- applying a date format to all observations
+        CASE
+            WHEN to_date(streaming_data.canceled_date, 'YYYY-MM-DD'::text) <> '0001-01-01 BC'::date THEN to_date(streaming_data.canceled_date, 'YYYY-MM-DD'::text)
+            ELSE NULL::date
+        END AS canceled_date,
+    streaming_data.subscription_cost,
+    streaming_data.subscription_interval,
+    streaming_data.was_subscription_paid AS paid,
+    row_number() OVER (PARTITION BY streaming_data.customer_id ORDER BY streaming_data.created_date DESC) AS last_activity_event,
+    row_number() OVER (PARTITION BY streaming_data.customer_id ORDER BY streaming_data.created_date) AS first_activity_event,
+    count(*) OVER (PARTITION BY streaming_data.customer_id) AS nb_activity_event
+   FROM streaming_data
+WITH DATA;
+
+ALTER TABLE IF EXISTS public.subscribers_data
+    OWNER TO postgres;
+
+
+--
+-- 0.3.2. Fast-Churn Materialized View
+-- View: public.fast_churn
+
+-- DROP MATERIALIZED VIEW IF EXISTS public.fast_churn;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS public.fast_churn
+TABLESPACE pg_default
+AS
+ SELECT DISTINCT 'fast_churned'::text AS category,
+    subscribers_data.customer_id,
+    subscribers_data.created_date,
+    subscribers_data.canceled_date,
+    subscribers_data.subscription_cost,
+    subscribers_data.subscription_interval,
+    subscribers_data.paid,
+    subscribers_data.last_activity_event,
+    subscribers_data.first_activity_event,
+    subscribers_data.nb_activity_event
+   FROM subscribers_data
+  WHERE subscribers_data.nb_activity_event = 1 
+	AND subscribers_data.last_activity_event = 1 
+	AND subscribers_data.canceled_date IS NOT NULL 
+	AND to_char(subscribers_data.created_date::timestamp with time zone, 'YYYY-MM'::text) = to_char(subscribers_data.canceled_date::timestamp with time zone, 'YYYY-MM'::text)
+WITH DATA;
+
+ALTER TABLE IF EXISTS public.fast_churn
+    OWNER TO postgres;
+
+
+--
+-- 0.3.3. Churned Users Materialized View
+-- View: public.churned_users
+
+-- DROP MATERIALIZED VIEW IF EXISTS public.churned_users;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS public.churned_users
+TABLESPACE pg_default
+AS
+ SELECT DISTINCT 'churned'::text AS category,
+    t1.customer_id,
+    t1.created_date,
+    t1.canceled_date,
+    t1.subscription_cost,
+    t1.subscription_interval,
+    t1.paid,
+    t1.last_activity_event,
+    t1.first_activity_event,
+    t1.nb_activity_event
+   FROM subscribers_data t1
+     LEFT JOIN fast_churn t2 ON t1.customer_id = t2.customer_id
+  WHERE t1.last_activity_event = 1 
+	AND t1.canceled_date IS NOT NULL 
+	AND t2.customer_id IS NULL -- removing fast churn so we avoid duplicates
+WITH DATA;
+
+ALTER TABLE IF EXISTS public.churned_users
+    OWNER TO postgres;
+
+
+--
+-- 0.3.4. New Users Materialized View
+-- View: public.new_users
+
+-- DROP MATERIALIZED VIEW IF EXISTS public.new_users;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS public.new_users
+TABLESPACE pg_default
+AS
+ WITH all_new_users AS (
+         SELECT subscribers_data.customer_id,
+            subscribers_data.created_date,
+            subscribers_data.canceled_date,
+            subscribers_data.subscription_cost,
+            subscribers_data.subscription_interval,
+            subscribers_data.paid,
+            subscribers_data.last_activity_event,
+            subscribers_data.first_activity_event,
+            subscribers_data.nb_activity_event
+           FROM subscribers_data
+          WHERE subscribers_data.nb_activity_event = 1 
+		AND to_char(subscribers_data.created_date::timestamp with time zone, 'YYYY-MM'::text) = '2023-09'::text -- subscriber who has just signed up for the subscription in the last month of the data 
+        )
+ SELECT DISTINCT 'new'::text AS category,
+    t1.customer_id,
+    t1.created_date,
+    t1.canceled_date,
+    t1.subscription_cost,
+    t1.subscription_interval,
+    t1.paid,
+    t1.last_activity_event,
+    t1.first_activity_event,
+    t1.nb_activity_event
+   FROM all_new_users t1
+     LEFT JOIN fast_churn t2 ON t1.customer_id = t2.customer_id AND to_char(t1.created_date::timestamp with time zone, 'YYYY-MM'::text) = to_char(t2.canceled_date::timestamp with time zone, 'YYYY-MM'::text)
+  WHERE t2.customer_id IS NULL -- removing fast churn so we avoid duplicates
+WITH DATA;
+
+ALTER TABLE IF EXISTS public.new_users
+    OWNER TO postgres;
+
+
+--
+-- 0.3.5. Reccuring Users Materialized View
+-- View: public.reccuring_users
+
+-- DROP MATERIALIZED VIEW IF EXISTS public.reccuring_users;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS public.reccuring_users
+TABLESPACE pg_default
+AS
+ SELECT DISTINCT 'reccuring'::text AS category,
+    subscribers_data.customer_id,
+    subscribers_data.created_date,
+    subscribers_data.canceled_date,
+    subscribers_data.subscription_cost,
+    subscribers_data.subscription_interval,
+    subscribers_data.paid,
+    subscribers_data.last_activity_event,
+    subscribers_data.first_activity_event,
+    subscribers_data.nb_activity_event
+   FROM subscribers_data
+  WHERE subscribers_data.nb_activity_event = 1 AND subscribers_data.canceled_date IS NULL AND to_char(subscribers_data.created_date::timestamp with time zone, 'YYYY-MM'::text) <> '2023-09'::text
+WITH DATA;
+
+ALTER TABLE IF EXISTS public.reccuring_users
+    OWNER TO postgres;
+
+
+--
+-- 0.3.6. Reccuring Users Materialized View
+-- View: public.recovered_users
+
+-- DROP MATERIALIZED VIEW IF EXISTS public.recovered_users;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS public.recovered_users
+TABLESPACE pg_default
+AS
+ SELECT DISTINCT 'recovered'::text AS category,
+    subscribers_data.customer_id,
+    subscribers_data.created_date,
+    subscribers_data.canceled_date,
+    subscribers_data.subscription_cost,
+    subscribers_data.subscription_interval,
+    subscribers_data.paid,
+    subscribers_data.last_activity_event,
+    subscribers_data.first_activity_event,
+    subscribers_data.nb_activity_event
+   FROM subscribers_data
+  WHERE subscribers_data.nb_activity_event > 1 AND subscribers_data.last_activity_event = 1 AND subscribers_data.canceled_date IS NULL
+WITH DATA;
+
+ALTER TABLE IF EXISTS public.recovered_users
+    OWNER TO postgres;
+
 
 
 ----------------
 -- 1. DATA ANALYSIS
 ----------------
 
--- 1.1. Accounts Breakdown (Subscriber-based (as of 2023-09))
--- after quickly cleaning the data (step 0), we're going to create a category dimension refering to the status of each subscriber based on their last status in the program (1). finally, we'll gather all the created categories and aggregate them by counting the number of subscribers in each (2).
--- (see glossary for categories' definition)
+--
+-- 1.1. Accounts Breakdown (Subscriber-based (as of 2023-09)) 
 
--- (0)
 with
-data_prep as ( 
-	select
-		customer_id 
-		, created_date
-		, case 
-			when to_date(canceled_date, 'YYYY-MM-DD') != '0001-01-01 BC' then to_date(canceled_date, 'YYYY-MM-DD') -- applying a date format to all observations
-			else null
-			end 
-		as canceled_date 
-		, subscription_cost
-		, subscription_interval 
-		, was_subscription_paid as paid
-		, row_number() over(partition by customer_id order by created_date desc) as last_activity_event
-		, row_number() over(partition by customer_id order by created_date) as first_activity_event
-		, count(*) over(partition by customer_id) as nb_activity_event
-	from 
-		streaming_data
-)
--- (1)
-, fast_churn as ( 
-	select 
-		distinct 'fast_churned' as category
-		, *
-	from
-		data_prep 
-	where
-		nb_activity_event = 1 
-		and last_activity_event = 1
-		and canceled_date is not null 
-		and to_char(created_date, 'YYYY-MM') = to_char(canceled_date, 'YYYY-MM') 
-)  
-, churned_users as (
-	select 
-		distinct 'churned' as category
-		, t1.*  
-	from 
-		data_prep t1 
-	left join 
-		fast_churn t2 
-		on t1.customer_id = t2.customer_id
-	where 
-		t1.last_activity_event = 1 
-		and t1.canceled_date is not null
-		and t2.customer_id is null -- removing fast churn so we avoid duplicates
-)  
-, all_new_users as ( 
-	select 
-		*
-	from 
-		data_prep
-	where 
-		nb_activity_event = 1  
-		and to_char(created_date, 'YYYY-MM') = '2023-09' -- subscriber who has just signed up for the subscription in the last month of the data 
-)  
-, new_users as ( -- removing fast_churned
-	select
-		distinct 'new' as category
-		, t1.* 
-	from 
-		all_new_users t1 
-	left join 
-		fast_churn t2 
-		on t1.customer_id = t2.customer_id
-		and to_char(t1.created_date, 'YYYY-MM') = to_char(t2.canceled_date, 'YYYY-MM')
-	where 
-		t2.customer_id is null -- removing fast churn so we avoid duplicates
-)  
-, reccuring_users as (
-	select
-		distinct 'reccuring' as category
-		, *  
-	from
-		data_prep 
-	where
-		nb_activity_event = 1
-		and canceled_date is null 
-		and to_char(created_date, 'YYYY-MM') != '2023-09' -- otherwise is null 
-) 
-, recovered_users as (
-	select
-		distinct 'recovered' as category
-		, *  
-	from 
-		data_prep 
-	where 
-		nb_activity_event > 1 
-		and last_activity_event = 1 
-		and canceled_date is null  
-)  
--- (2)
-, subscriber_category as (
+subscriber_category as (
 	select * from new_users 
 	union 
 	select * from reccuring_users 
@@ -147,16 +246,16 @@ order by
 	1 desc
 
 
--- 1.2. Active Accounts Over Time (from the date subscribers joined for the first time, regardless of whether they were later recovered)
--- using the temporary table 'data_prep' created in the previous query (1.1. Accounts Breakdown) 
+--
+-- 1.2. Active Accounts Over Time (from the date subscribers joined for the first time, regardless of whether they were later recovered) 
 
-(...)
-, first_touch as ( 
+with
+first_touch as ( 
 	select 
 		customer_id
 		, min(to_char(created_date, 'YYYY-MM')) as cohort_month
 	from
-		data_prep
+		subscribers_data
 	group by
 		1
 )
@@ -180,7 +279,7 @@ order by
 			t1.*
 			, t2.cohort_month 
 		from
-			data_prep t1 
+			subscribers_data t1 
 		left join 
 			first_touch t2 
 			on t1.customer_id = t2.customer_id 
@@ -191,7 +290,6 @@ order by
 	group by 
 		1
 )
-
 select 
 	distinct t1.period 
 	, t1.accounts
@@ -204,12 +302,12 @@ join
 order by 
 	1
 
-	
--- 1.3. Subscriber Tenure Distribution (from the date subscribers stayed active for the last time (only the reactivation date of recovered accounts will be taken into account))
--- using the temporary tables 'data_prep', 'fast_churn', 'churned_users', 'new_users', 'reccuring_users' and 'recovered_users' created in the really first query (1.1. Accounts Breakdown)
 
-(...)
-, inactive_subscribers as ( 
+--
+-- 1.3. Subscriber Tenure Distribution (from the date subscribers stayed active for the last time (only the reactivation date of recovered accounts will be taken into account))
+
+with
+inactive_subscribers as ( 
 	select 'inactive' as main_category, category, customer_id from fast_churn
 	union 
 	select 'inactive' as main_category, category, customer_id from churned_users 
@@ -236,7 +334,7 @@ order by
 		, t2.category
 		, t2.main_category
 	from 
-		data_prep t1
+		subscribers_data t1
 	join 
 		all_together t2
 		on t1.customer_id = t2.customer_id
@@ -253,7 +351,7 @@ order by
 		, t2.category
 		, t2.main_category
 	from 
-		data_prep t1
+		subscribers_data t1
 	join 
 		all_together t2
 		on t1.customer_id = t2.customer_id
@@ -303,6 +401,7 @@ from (
 ) a
 
 
+--
 -- 1.4. Subscriber Tenure Trends by Engagement Status (from the date subscribers stayed active for the last time (only the reactivation date of recovered accounts will be taken into account)
 -- using the final temporary table 'month_tenure' created in the previous query (1.3. Subscriber Tenure Distribution)
 
@@ -323,11 +422,11 @@ from (
 ) a
 
 
+--
 -- 1.5. Payment Behaviours of Churned Accounts 
--- using the final temporary tables 'data_prep', 'fast_churn' and 'churned_users' created in the really first query (1.1. Accounts Breakdown)
 
-(...)
-, churned_all_together as ( 
+with
+churned_all_together as ( 
 	select * from fast_churned 
 	union 
 	select * from churned_users  
@@ -350,24 +449,24 @@ order by
 -- Nearly all subscribers who have churned have paid their subscription, wheareas more than 30% of fast-churned did not, suggesting that their lack of payment could be the reason for their cancellation	
 
 
+--
 -- 1.6. Cohort Analysis (including Fast-Churn)
--- using the final temporary table 'data_prep' created in the really first query (1.1. Accounts Breakdown)
 
-(...)
-, calendar_month as (
+with 
+calendar_month as (
     -- generate a series of months for each subscriber based on their created_date to their canceled_date; using '2023-09-30' as canceled_date for active accounts as it's the last date we have in the dataset
     select
         	t1.customer_id
         	, generate_series(t1.created_date::date, coalesce(t1.canceled_date, '2023-09-30')::date,'1 month'::interval)::date as month_date 
     from 
-        	data_prep t1 
+        	subscribers_data t1 
 ) 
 , cohort_buckets as ( 
 	select 
 		customer_id
 		, cast(date_trunc('month', min(created_date)) as date) as cohort_month
 	from
-		data_prep
+		subscribers_data
 	group by
 		1
 )  
@@ -376,7 +475,7 @@ order by
 		customer_id 
 		, max(canceled_date) as last_touch 
 	from
-		data_prep
+		subscribers_data
 	where 
 		last_activity_event = 1
 	group by
