@@ -60,7 +60,7 @@ ALTER TABLE IF EXISTS public.subscribers_data
 
 
 --
--- 0.3.2. Fast-Churn Materialized View (Subscriber who has canceled the subscription within the same month they signed up and has not been returned)
+-- 0.3.2. Fast-Churn Materialized View (Subscriber who has canceled the subscription within the same month they signed up and has not returned)
 -- View: public.fast_churn
 
 -- DROP MATERIALIZED VIEW IF EXISTS public.fast_churn;
