@@ -37,20 +37,22 @@ ALTER TABLE IF EXISTS public.streaming_data
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.subscribers_data
 TABLESPACE pg_default
 AS
- SELECT streaming_data.customer_id,
+ SELECT 
+    streaming_data.customer_id,
     streaming_data.created_date,
 	-- applying a date format to all observations
-        CASE
-            WHEN to_date(streaming_data.canceled_date, 'YYYY-MM-DD'::text) <> '0001-01-01 BC'::date THEN to_date(streaming_data.canceled_date, 'YYYY-MM-DD'::text)
-            ELSE NULL::date
-        END AS canceled_date,
+	CASE
+	    WHEN to_date(streaming_data.canceled_date, 'YYYY-MM-DD'::text) <> '0001-01-01 BC'::date THEN to_date(streaming_data.canceled_date, 'YYYY-MM-DD'::text)
+	    ELSE NULL::date
+	END AS canceled_date,
     streaming_data.subscription_cost,
     streaming_data.subscription_interval,
     streaming_data.was_subscription_paid AS paid,
     row_number() OVER (PARTITION BY streaming_data.customer_id ORDER BY streaming_data.created_date DESC) AS last_activity_event,
     row_number() OVER (PARTITION BY streaming_data.customer_id ORDER BY streaming_data.created_date) AS first_activity_event,
     count(*) OVER (PARTITION BY streaming_data.customer_id) AS nb_activity_event
-   FROM streaming_data
+  FROM 
+    streaming_data
 WITH DATA;
 
 ALTER TABLE IF EXISTS public.subscribers_data
@@ -66,7 +68,8 @@ ALTER TABLE IF EXISTS public.subscribers_data
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.fast_churn
 TABLESPACE pg_default
 AS
- SELECT DISTINCT 'fast_churned'::text AS category,
+ SELECT 
+    DISTINCT 'fast_churned'::text AS category,
     subscribers_data.customer_id,
     subscribers_data.created_date,
     subscribers_data.canceled_date,
@@ -76,11 +79,13 @@ AS
     subscribers_data.last_activity_event,
     subscribers_data.first_activity_event,
     subscribers_data.nb_activity_event
-   FROM subscribers_data
-  WHERE subscribers_data.nb_activity_event = 1 
-	AND subscribers_data.last_activity_event = 1 
-	AND subscribers_data.canceled_date IS NOT NULL 
-	AND to_char(subscribers_data.created_date::timestamp with time zone, 'YYYY-MM'::text) = to_char(subscribers_data.canceled_date::timestamp with time zone, 'YYYY-MM'::text)
+  FROM 
+    subscribers_data
+  WHERE 
+    subscribers_data.nb_activity_event = 1 
+    AND subscribers_data.last_activity_event = 1 
+    AND subscribers_data.canceled_date IS NOT NULL 
+    AND to_char(subscribers_data.created_date::timestamp with time zone, 'YYYY-MM'::text) = to_char(subscribers_data.canceled_date::timestamp with time zone, 'YYYY-MM'::text)
 WITH DATA;
 
 ALTER TABLE IF EXISTS public.fast_churn
@@ -96,7 +101,8 @@ ALTER TABLE IF EXISTS public.fast_churn
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.churned_users
 TABLESPACE pg_default
 AS
- SELECT DISTINCT 'churned'::text AS category,
+ SELECT 
+    DISTINCT 'churned'::text AS category,
     t1.customer_id,
     t1.created_date,
     t1.canceled_date,
@@ -106,11 +112,15 @@ AS
     t1.last_activity_event,
     t1.first_activity_event,
     t1.nb_activity_event
-   FROM subscribers_data t1
-     LEFT JOIN fast_churn t2 ON t1.customer_id = t2.customer_id
-  WHERE t1.last_activity_event = 1 
-	AND t1.canceled_date IS NOT NULL 
-	AND t2.customer_id IS NULL -- removing fast churn so we avoid duplicates
+  FROM 
+    subscribers_data t1
+  LEFT JOIN 
+    fast_churn t2 
+    ON t1.customer_id = t2.customer_id
+  WHERE 
+    t1.last_activity_event = 1 
+    AND t1.canceled_date IS NOT NULL 
+    AND t2.customer_id IS NULL -- removing fast churn so we avoid duplicates
 WITH DATA;
 
 ALTER TABLE IF EXISTS public.churned_users
@@ -126,8 +136,10 @@ ALTER TABLE IF EXISTS public.churned_users
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.new_users
 TABLESPACE pg_default
 AS
- WITH all_new_users AS (
-         SELECT subscribers_data.customer_id,
+ WITH 
+ all_new_users AS (
+         SELECT 
+	    subscribers_data.customer_id,
             subscribers_data.created_date,
             subscribers_data.canceled_date,
             subscribers_data.subscription_cost,
@@ -136,11 +148,15 @@ AS
             subscribers_data.last_activity_event,
             subscribers_data.first_activity_event,
             subscribers_data.nb_activity_event
-           FROM subscribers_data
-          WHERE subscribers_data.nb_activity_event = 1 
-		AND to_char(subscribers_data.created_date::timestamp with time zone, 'YYYY-MM'::text) = '2023-09'::text -- subscriber who has just signed up for the subscription in the last month of the data 
+          FROM 
+	    subscribers_data
+          WHERE 
+	     subscribers_data.nb_activity_event = 1 
+	     AND to_char(subscribers_data.created_date::timestamp with time zone, 'YYYY-MM'::text) = '2023-09'::text -- subscriber who has just signed up for the subscription in the last month of the data 
         )
- SELECT DISTINCT 'new'::text AS category,
+ SELECT 
+    DISTINCT 
+    'new'::text AS category,
     t1.customer_id,
     t1.created_date,
     t1.canceled_date,
@@ -150,9 +166,14 @@ AS
     t1.last_activity_event,
     t1.first_activity_event,
     t1.nb_activity_event
-   FROM all_new_users t1
-     LEFT JOIN fast_churn t2 ON t1.customer_id = t2.customer_id AND to_char(t1.created_date::timestamp with time zone, 'YYYY-MM'::text) = to_char(t2.canceled_date::timestamp with time zone, 'YYYY-MM'::text)
-  WHERE t2.customer_id IS NULL -- removing fast churn so we avoid duplicates
+   FROM 
+     all_new_users t1
+   LEFT JOIN 
+     fast_churn t2 
+     ON t1.customer_id = t2.customer_id 
+     AND to_char(t1.created_date::timestamp with time zone, 'YYYY-MM'::text) = to_char(t2.canceled_date::timestamp with time zone, 'YYYY-MM'::text)
+  WHERE 
+     t2.customer_id IS NULL -- removing fast churn so we avoid duplicates
 WITH DATA;
 
 ALTER TABLE IF EXISTS public.new_users
@@ -168,7 +189,8 @@ ALTER TABLE IF EXISTS public.new_users
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.reccuring_users
 TABLESPACE pg_default
 AS
- SELECT DISTINCT 'reccuring'::text AS category,
+ SELECT 
+    DISTINCT 'reccuring'::text AS category,
     subscribers_data.customer_id,
     subscribers_data.created_date,
     subscribers_data.canceled_date,
@@ -178,10 +200,12 @@ AS
     subscribers_data.last_activity_event,
     subscribers_data.first_activity_event,
     subscribers_data.nb_activity_event
-   FROM subscribers_data
-  WHERE subscribers_data.nb_activity_event = 1 
-	AND subscribers_data.canceled_date IS NULL 
-	AND to_char(subscribers_data.created_date::timestamp with time zone, 'YYYY-MM'::text) <> '2023-09'::text
+   FROM 
+    subscribers_data
+  WHERE 
+     subscribers_data.nb_activity_event = 1 
+     AND subscribers_data.canceled_date IS NULL 
+     AND to_char(subscribers_data.created_date::timestamp with time zone, 'YYYY-MM'::text) <> '2023-09'::text
 WITH DATA;
 
 ALTER TABLE IF EXISTS public.reccuring_users
@@ -197,7 +221,8 @@ ALTER TABLE IF EXISTS public.reccuring_users
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.recovered_users
 TABLESPACE pg_default
 AS
- SELECT DISTINCT 'recovered'::text AS category,
+ SELECT 
+    DISTINCT 'recovered'::text AS category,
     subscribers_data.customer_id,
     subscribers_data.created_date,
     subscribers_data.canceled_date,
@@ -207,8 +232,12 @@ AS
     subscribers_data.last_activity_event,
     subscribers_data.first_activity_event,
     subscribers_data.nb_activity_event
-   FROM subscribers_data
-  WHERE subscribers_data.nb_activity_event > 1 AND subscribers_data.last_activity_event = 1 AND subscribers_data.canceled_date IS NULL
+   FROM 
+     subscribers_data
+  WHERE 
+     subscribers_data.nb_activity_event > 1 
+     AND subscribers_data.last_activity_event = 1
+     AND subscribers_data.canceled_date IS NULL
 WITH DATA;
 
 ALTER TABLE IF EXISTS public.recovered_users
