@@ -93,7 +93,7 @@ ALTER TABLE IF EXISTS public.fast_churn
 
 
 --
--- 0.3.3. Churned Users Materialized View (Subscriber whose account has been canceled within a specific time frame and has not been returned)
+-- 0.3.3. Churned Users Materialized View (Subscriber whose account has been canceled within a specific time frame and has not returned)
 -- View: public.churned_users
 
 -- DROP MATERIALIZED VIEW IF EXISTS public.churned_users;
