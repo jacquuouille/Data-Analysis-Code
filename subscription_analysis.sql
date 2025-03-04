@@ -3,7 +3,7 @@
 ---------------
 
 --
--- 0.1. Creation of the table 
+-- 0.1. Creation of the table using the public dataset (https://mavenanalytics.io/data-playground?order=date_added%2Cdesc&page=5&pageSize=5)
 
 CREATE TABLE IF NOT EXISTS public.streaming_data
 (
@@ -179,7 +179,9 @@ AS
     subscribers_data.first_activity_event,
     subscribers_data.nb_activity_event
    FROM subscribers_data
-  WHERE subscribers_data.nb_activity_event = 1 AND subscribers_data.canceled_date IS NULL AND to_char(subscribers_data.created_date::timestamp with time zone, 'YYYY-MM'::text) <> '2023-09'::text
+  WHERE subscribers_data.nb_activity_event = 1 
+	AND subscribers_data.canceled_date IS NULL 
+	AND to_char(subscribers_data.created_date::timestamp with time zone, 'YYYY-MM'::text) <> '2023-09'::text
 WITH DATA;
 
 ALTER TABLE IF EXISTS public.reccuring_users
@@ -187,7 +189,7 @@ ALTER TABLE IF EXISTS public.reccuring_users
 
 
 --
--- 0.3.6. Reccuring Users Materialized View
+-- 0.3.6. Recovered Users Materialized View
 -- View: public.recovered_users
 
 -- DROP MATERIALIZED VIEW IF EXISTS public.recovered_users;
