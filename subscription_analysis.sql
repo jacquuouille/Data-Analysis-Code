@@ -27,6 +27,7 @@ ALTER TABLE IF EXISTS public.streaming_data
 
 --
 -- 0.3. Creation of the materialized views 
+-- Here we're going to create materialized views in order to easily use them in the code for our analysis. 
 
 --
 -- 0.3.1. Subscribers Data Materialized View (using the created table by slighlty cleaning it and adding ranking activity dimensions)
