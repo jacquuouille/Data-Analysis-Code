@@ -26,10 +26,10 @@ ALTER TABLE IF EXISTS public.streaming_data
 
 
 --
--- 0.3. Creation of the materialized views (see glossary (page 2 in the dashboard) for definitions)
+-- 0.3. Creation of the materialized views 
 
 --
--- 0.3.1. Subscribers Data Materialized View
+-- 0.3.1. Subscribers Data Materialized View (using the created table by slighlty cleaning it and adding ranking activity dimensions)
 -- View: public.subscribers_data
 
 -- DROP MATERIALIZED VIEW IF EXISTS public.subscribers_data;
@@ -60,7 +60,7 @@ ALTER TABLE IF EXISTS public.subscribers_data
 
 
 --
--- 0.3.2. Fast-Churn Materialized View
+-- 0.3.2. Fast-Churn Materialized View (Subscriber who has canceled the subscription within the same month they signed up and has not been returned)
 -- View: public.fast_churn
 
 -- DROP MATERIALIZED VIEW IF EXISTS public.fast_churn;
@@ -93,7 +93,7 @@ ALTER TABLE IF EXISTS public.fast_churn
 
 
 --
--- 0.3.3. Churned Users Materialized View
+-- 0.3.3. Churned Users Materialized View (Subscriber whose account has been canceled within a specific time frame and has not been returned)
 -- View: public.churned_users
 
 -- DROP MATERIALIZED VIEW IF EXISTS public.churned_users;
@@ -128,7 +128,7 @@ ALTER TABLE IF EXISTS public.churned_users
 
 
 --
--- 0.3.4. New Users Materialized View
+-- 0.3.4. New Users Materialized View (Subscriber who has just signed up for the subscription)
 -- View: public.new_users
 
 -- DROP MATERIALIZED VIEW IF EXISTS public.new_users;
@@ -181,7 +181,7 @@ ALTER TABLE IF EXISTS public.new_users
 
 
 --
--- 0.3.5. Reccuring Users Materialized View
+-- 0.3.5. Reccuring Users Materialized View (Subscriber who has remained continuously active with the subscription, without any interruptions)
 -- View: public.reccuring_users
 
 -- DROP MATERIALIZED VIEW IF EXISTS public.reccuring_users;
@@ -213,7 +213,7 @@ ALTER TABLE IF EXISTS public.reccuring_users
 
 
 --
--- 0.3.6. Recovered Users Materialized View
+-- 0.3.6. Recovered Users Materialized View (Subscriber who previously stopped engaging with the subscription, but has returned)
 -- View: public.recovered_users
 
 -- DROP MATERIALIZED VIEW IF EXISTS public.recovered_users;
