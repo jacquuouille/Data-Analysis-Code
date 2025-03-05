@@ -156,8 +156,7 @@ AS
 	     AND to_char(subscribers_data.created_date::timestamp with time zone, 'YYYY-MM'::text) = '2023-09'::text -- subscriber who has just signed up for the subscription in the last month of the data 
         )
  SELECT 
-    DISTINCT 
-    'new'::text AS category,
+    DISTINCT 'new'::text AS category,
     t1.customer_id,
     t1.created_date,
     t1.canceled_date,
