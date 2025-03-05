@@ -487,10 +487,10 @@ with
 calendar_month as (
     -- generate a series of months for each subscriber based on their created_date to their canceled_date; using '2023-09-30' as canceled_date for active accounts as it's the last date we have in the dataset
     select
-        	t1.customer_id
-        	, generate_series(t1.created_date::date, coalesce(t1.canceled_date, '2023-09-30')::date,'1 month'::interval)::date as month_date 
+        	customer_id
+        	, generate_series(created_date::date, coalesce(canceled_date, '2023-09-30')::date,'1 month'::interval)::date as month_date 
     from 
-        	subscribers_data t1 
+        	subscribers_data 
 ) 
 , cohort_buckets as ( 
 	select 
