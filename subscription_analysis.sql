@@ -433,7 +433,7 @@ from (
 
 
 --
--- 1.4. Subscriber Tenure Trends by Engagement Status (from the date subscribers stayed active for the last time (only the reactivation date of recovered accounts will be taken into account)
+-- 1.4. Subscriber Tenure Trends by Engagement Status (from the date subscribers stayed active for the last time (only the reactivation date of recovered accounts will be taken into account))
 -- using the final temporary table 'month_tenure' created in the previous query (1.3. Subscriber Tenure Distribution)
 
 (...)
