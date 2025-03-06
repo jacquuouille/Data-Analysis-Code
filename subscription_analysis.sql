@@ -442,7 +442,7 @@ order by
 select 
 	distinct *
 	, sum(accounts) over(partition by main_category order by real_month_tenure rows between unbounded preceding and current row) as cumul_accounts
-	, round(100.0*sum(accounts) over(partition by main_category order by real_month_tenure rows between unbounded preceding and current row) / sum(accounts) over(partition by main_category), 1) as prop_cumul_accounts
+	, round(100.0*sum(accounts) over(partition by main_category, real_month_tenure) / sum(accounts) over(partition by main_category), 1) as prop_accounts
 from (
 	select 
 		main_category
