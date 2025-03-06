@@ -462,7 +462,7 @@ order by
 
 with
 churned_all_together as ( 
-	select * from fast_churned 
+	select * from fast_churn
 	union 
 	select * from churned_users  
 ) 
