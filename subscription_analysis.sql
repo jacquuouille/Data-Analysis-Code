@@ -430,6 +430,8 @@ from (
 	group by 
 		1  
 ) a
+order by 
+	1
 
 
 --
