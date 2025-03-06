@@ -441,18 +441,20 @@ order by
 (...)
 select 
 	distinct *
-	, sum(accounts) over(partition by main_category order by month_tenure_bis rows between unbounded preceding and current row) as cumul_accounts
-	, round(100.0*sum(accounts) over(partition by main_category order by month_tenure_bis rows between unbounded preceding and current row) / sum(accounts) over(partition by main_category), 1) as prop_cumul_accounts
+	, sum(accounts) over(partition by main_category order by real_month_tenure rows between unbounded preceding and current row) as cumul_accounts
+	, round(100.0*sum(accounts) over(partition by main_category order by real_month_tenure rows between unbounded preceding and current row) / sum(accounts) over(partition by main_category), 1) as prop_cumul_accounts
 from (
 	select 
 		main_category
-		, month_tenure_bis
+		, real_month_tenure
 		, count(distinct customer_id) as accounts 
 	from 
 		month_tenure 
 	group by 
 		1, 2
 ) a
+order by 
+	1, 2
 
 
 --
