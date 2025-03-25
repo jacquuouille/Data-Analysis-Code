@@ -1,3 +1,19 @@
+-- Subscription Analysis - SQL Code 
+-- Summary: 
+   -- 0. Data Importation 
+    -- 0.1. Creation of the data table
+    -- 0.2. Insertion of the data into the data table
+    -- 0.3. Creation of the materialized views
+
+   -- 1. Data Analysis 
+    -- 1.1. Accounts Breakdown  
+    -- 1.2. Active Accounts Over Time
+    -- 1.3. Subscriber Tenure Distribution
+    -- 1.4. Subscriber Tenure Trends by Engagement Status 
+    -- 1.5. Payment Behaviours of Churned Accounts 
+    -- 1.6. Cohort Analysis
+
+
 ---------------
 -- 0. DATA IMPORTATION 
 ---------------
