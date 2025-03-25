@@ -1,9 +1,9 @@
 -- Subscription Analysis - SQL Code 
 -- Summary: 
    -- 0. Data Importation 
-    -- 0.1. Creation of the data table
-    -- 0.2. Insertion of the data into the data table
-    -- 0.3. Creation of the materialized views
+    -- 0.1. Creating the data table
+    -- 0.2. Inserting data into the table  
+    -- 0.3. Creating materialized views  
 
    -- 1. Data Analysis 
     -- 1.1. Accounts Breakdown  
