@@ -84,39 +84,39 @@ departure_cities as (
 		city_dataset t2 
 		on t1.city_arrival = t2.city
 )
-	select 
-		t1.transaction_id
-		, t1.purchase_date
-		, t1.purchase_time
-		, t1.purchase_type
-		, t1.payment_method
-		, t1.railcard
-		, t1.ticket_class
-		, t1.ticket_type
-		, t1.price
-		, t1.departure_station
-		, t2.city_departure
-		, t2.latitude_departure
-		, t2.longitude_departure
-		, t1.arrival_destination
-		, t3.city_arrival
-		, t3.latitude_arrival
-		, t3.longitude_arrival
-		, t1.journey_date 
-		, t1.departure_time
-		, t1.arrival_time 
-		, t1.actual_arrival_time
-		, t1.journey_status 
-		, t1.delay_reason 
-		, t1.refund_request 
-	from 
-		railway t1
-	left join 
-		departure_city_geo t2 
-		on t1.departure_station = t2.departure_station
-	left join 
-		arrival_city_geo t3 
-		on t1.arrival_destination = t3.arrival_destination
+select 
+	t1.transaction_id
+	, t1.purchase_date
+	, t1.purchase_time
+	, t1.purchase_type
+	, t1.payment_method
+	, t1.railcard
+	, t1.ticket_class
+	, t1.ticket_type
+	, t1.price
+	, t1.departure_station
+	, t2.city_departure
+	, t2.latitude_departure
+	, t2.longitude_departure
+	, t1.arrival_destination
+	, t3.city_arrival
+	, t3.latitude_arrival
+	, t3.longitude_arrival
+	, t1.journey_date 
+	, t1.departure_time
+	, t1.arrival_time 
+	, t1.actual_arrival_time
+	, t1.journey_status 
+	, t1.delay_reason 
+	, t1.refund_request 
+from 
+	railway t1
+left join 
+	departure_city_geo t2 
+	on t1.departure_station = t2.departure_station
+left join 
+	arrival_city_geo t3 
+	on t1.arrival_destination = t3.arrival_destination
 order by 
 	1
 WITH NO DATA;
