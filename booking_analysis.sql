@@ -2,10 +2,23 @@
 -- Summary: 
    -- 0. Creating the master table
    -- 1. Data Analysis 
+    -- 1.1. Bookings Statistics per Ticket Type
+    -- 1.2. Bookings per Ticket Type over time 
+    -- 1.3. Average Ticket Price over time: is that a promotion period?  
+    -- 1.4. Off-Peak Bookings over time 
+    -- 1.5. Distribution of Tickets Booked by Purchase Type
+    -- 1.6. Distribution of bookings per days in advance
+    -- 1.7. Top departure station
+    -- 1.8. Top arrival station
+    -- 1.9. Heatmap of the Average Daily Bookings by Day of Purchase and Time of Purchase
+    -- 1.10. Distribution of the number of Delayed Reasons per Journey Status
+    -- 1.11. Distribution of the number of delayed trains per Delay Duration
+    -- 1.12. Distribution of the number of Refunded Tickets per Journey Status
+    -- 1.13. Distribution of the number of Bookings per Journey Status 
 
 
 ---------------
--- 0. DATA IMPORTATION 
+-- 0. THE MASTER TABLE
 ---------------
 
 --
