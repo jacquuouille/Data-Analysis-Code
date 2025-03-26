@@ -106,11 +106,6 @@ departure_cities as (
 		, t1.departure_time
 		, t1.arrival_time 
 		, t1.actual_arrival_time
-		, case 
-			when t1.journey_status = 'Cancelled' and t1.actual_arrival_time = '00:00:00' then null 
-			else t1.actual_arrival_time 
-			end 
-		  as actual_real_arrival_time 
 		, t1.journey_status 
 		, t1.delay_reason 
 		, t1.refund_request 
