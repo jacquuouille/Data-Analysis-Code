@@ -197,7 +197,7 @@ ALTER TABLE IF EXISTS public.new_users
 
 
 --
--- 0.3.5. Reccuring Users Materialized View (Subscriber who has remained continuously active with the subscription, without any interruptions)
+-- 0.3.5. Reccuring Users Materialized View (Subscriber who has remained continuously active with the subscription, without any interruption)
 -- View: public.reccuring_users
 
 -- DROP MATERIALIZED VIEW IF EXISTS public.reccuring_users;
