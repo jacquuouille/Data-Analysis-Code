@@ -133,20 +133,6 @@ REFRESH MATERIALIZED VIEW railway_tickets
 with 
 railway_bookings as ( 
 	select 
-		*
-		, case 
-			when journey_status = 'Cancelled' and actual_arrival_time = '00:00:00' then null 
-			else actual_arrival_time 
-			end 
-		  as actual_real_arrival_time 
-	from 
-		railway
-)
-select 
-	* 
-	, round(100.0*sum(bookings) over(partition by ticket_type) / sum(bookings) over(), 1) as prop_bookings
-from ( 
-	select 
 		distinct ticket_type    
 		, count(distinct transaction_id) as bookings  -- 1 row = 1 booking (count(*) = count(distinct transaction_id))
 		, count(distinct transaction_id) / count(distinct purchase_date) as avg_daily_bookings
@@ -154,6 +140,13 @@ from (
 		railway_bookings
 	group by  
 		1
+)
+select 
+	* 
+	, round(100.0*sum(bookings) over(partition by ticket_type) / sum(bookings) over(), 1) as prop_bookings
+from 
+	railway_bookings
+	
 ) a
 order by 
 	4 desc
@@ -163,18 +156,6 @@ order by
 
 ----
 -- 1.2. Bookings per Ticket Type over time 
-with 
-railway_bookings as ( 
-	select 
-		*
-		, case 
-			when journey_status = 'Cancelled' and actual_arrival_time = '00:00:00' then null 
-			else actual_arrival_time 
-			end 
-		  as actual_real_arrival_time 
-	from 
-		railway
-)
 select 
 	distinct ticket_type   
 	, purchase_date
@@ -196,18 +177,6 @@ order by
 
 ----
 -- 1.3. Average Ticket Price over time: is that a promotion period?  
-with 
-railway_bookings as ( 
-	select 
-		*
-		, case 
-			when journey_status = 'Cancelled' and actual_arrival_time = '00:00:00' then null 
-			else actual_arrival_time 
-			end 
-		  as actual_real_arrival_time 
-	from 
-		railway
-)
 select 
 	purchase_date 
 	, round(avg(price), 1) as avg_price
@@ -223,19 +192,6 @@ order by
 
 ----
 -- 1.4. Off-Peak Bookings over time 
-with 
-railway_bookings as ( 
-	select 
-		*
-		, case 
-			when journey_status = 'Cancelled' and actual_arrival_time = '00:00:00' then null 
-			else actual_arrival_time 
-			end 
-		  as actual_real_arrival_time 
-	from 
-		railway
-)
-
 select 
 	purchase_date 
 	, date_part('isodow', purchase_date) as date -- week starting Monday ('1' = Monday)
@@ -254,18 +210,6 @@ order by
 
 ----
 -- 1.5. Distribution of Tickets Booked by Purchase Type
-with 
-railway_bookings as ( 
-	select 
-		*
-		, case 
-			when journey_status = 'Cancelled' and actual_arrival_time = '00:00:00' then null 
-			else actual_arrival_time 
-			end 
-		  as actual_real_arrival_time 
-	from 
-		railway
-)
 select 
 	distinct purchase_type    
 	, count(transaction_id) over(partition by purchase_type) as revenue
@@ -280,18 +224,7 @@ order by
 -- 
 -- 1.6. Distribution of bookings per days in advance
 with 
-railway_bookings as ( 
-	select 
-		*
-		, case 
-			when journey_status = 'Cancelled' and actual_arrival_time = '00:00:00' then null 
-			else actual_arrival_time 
-			end 
-		  as actual_real_arrival_time 
-	from 
-		railway
-)
-, booking_metrics as ( 
+booking_metrics as ( 
 	select 
 		distinct days_in_advance 
 		, round(avg(price) over(partition by days_in_advance), 1) as avg_price
@@ -317,18 +250,6 @@ order by
 
 --
 -- 1.7. Top departure station
-with 
-railway_bookings as ( 
-	select 
-		*
-		, case 
-			when journey_status = 'Cancelled' and actual_arrival_time = '00:00:00' then null 
-			else actual_arrival_time 
-			end 
-		  as actual_real_arrival_time 
-	from 
-		railway
-)
 select 
 	departure_station
 	, count(distinct transaction_id) as bookings -- 1 row = 1 booking (count(*) = count(distinct transaction_id))
@@ -344,18 +265,6 @@ limit 5
 
 -- 
 -- 1.8. Top arrival station
-with 
-railway_bookings as ( 
-	select 
-		*
-		, case 
-			when journey_status = 'Cancelled' and actual_arrival_time = '00:00:00' then null 
-			else actual_arrival_time 
-			end 
-		  as actual_real_arrival_time 
-	from 
-		railway
-)
 select 
 	arrival_destination
 	, count(distinct transaction_id) as bookings -- 1 row = 1 booking (count(*) = count(distinct transaction_id))
@@ -371,19 +280,7 @@ limit 5
 
 --
 -- 1.9. Heatmap of the Average Daily Bookings by Day of Purchase and Time of Purchase
-with 
-railway_bookings as ( 
-	select 
-		*
-		, case 
-			when journey_status = 'Cancelled' and actual_arrival_time = '00:00:00' then null 
-			else actual_arrival_time 
-			end 
-		  as actual_real_arrival_time 
-	from 
-		railway
-)
--- creating ta pivot table
+-- creating pivot table
 select 
 	hour_day
 	, round(coalesce(avg(case when week_day = 1 then bookings else null end), 0), 0) as "1"
@@ -419,19 +316,6 @@ order by
 
 -- 
 -- 1.10. Distribution of the number of Delayed Reasons per Journey Status
-with 
-railway_bookings as ( 
-	select 
-		*
-		, case 
-			when journey_status = 'Cancelled' and actual_arrival_time = '00:00:00' then null 
-			else actual_arrival_time 
-			end 
-		  as actual_real_arrival_time 
-	from 
-		railway
-)
-
 select 
 	distinct journey_status
 	, delay_reason 
@@ -448,18 +332,7 @@ order by
 -- 
 -- 1.11. Distribution of the number of delayed trains per Delay Duration
 with 
-railway_bookings as ( 
-	select 
-		*
-		, case 
-			when journey_status = 'Cancelled' and actual_arrival_time = '00:00:00' then null 
-			else actual_arrival_time 
-			end 
-		  as actual_real_arrival_time 
-	from 
-		railway
-)
-, delay_categories as ( 
+delay_categories as ( 
 	select 
 		case 
 			when delayed between '00:00:00' and '00:29:00' then '1. less than 30min'
@@ -495,19 +368,6 @@ order by
 
 -- 
 -- 1.12. Distribution of the number of Refunded Tickets per Journey Status
-with 
-railway_bookings as ( 
-	select 
-		*
-		, case 
-			when journey_status = 'Cancelled' and actual_arrival_time = '00:00:00' then null 
-			else actual_arrival_time 
-			end 
-		  as actual_real_arrival_time 
-	from 
-		railway
-)
-
 select 
 	distinct journey_status 
 	, refund_request 
@@ -524,23 +384,10 @@ order by
 
 -- 
 -- 1.13. Distribution of the number of Bookings per Journey Status 
-with 
-railway_bookings as ( 
-	select 
-		*
-		, case 
-			when journey_status = 'Cancelled' and actual_arrival_time = '00:00:00' then null 
-			else actual_arrival_time 
-			end 
-		  as actual_real_arrival_time 
-	from 
-		railway
-)
-
 select 
 	journey_date 
 	, count(distinct transaction_id) as bookings -- 1 row = 1 booking (count(*) = count(distinct transaction_id))
-    , count(distinct case when journey_status = 'On Time' then transaction_id else null end) as ontime_journeys
+        , count(distinct case when journey_status = 'On Time' then transaction_id else null end) as ontime_journeys
 	, count(distinct case when journey_status = 'Delayed' then transaction_id else null end) as delayed_journeys
 	, count(distinct case when journey_status = 'Cancelled' then transaction_id else null end) as cancelled_journeys
 from
