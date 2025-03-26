@@ -1,5 +1,4 @@
 # Python Script: connecting external data to PostgreSQL database, creating the data table and inserting data into it
-#
 
 import psycopg2
 import pandas as pd
