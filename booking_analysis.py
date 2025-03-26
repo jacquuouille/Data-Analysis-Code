@@ -11,7 +11,7 @@ DB_HOST = "my_db_host"
 DB_PORT = "my_db_port"
 
 # Read the CSV file (parse dates if necessary)
-df = pd.read_csv("/Users/jacquuouille/Desktop/railway_railway.csv", parse_dates=True)
+df = pd.read_csv("/my_pathname/rmy_file.csv", parse_dates=True)
 
 # Function to map pandas dtypes to PostgreSQL types
 def map_dtype(column, dtype):
