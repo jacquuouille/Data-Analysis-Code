@@ -19,7 +19,7 @@
 ---------------
 
 --
--- 0.1. Creation of the table using the public dataset (https://mavenanalytics.io/data-playground?order=date_added%2Cdesc&page=5&pageSize=5)
+-- 0.1. Creating the table using the public dataset (https://mavenanalytics.io/data-playground?order=date_added%2Cdesc&page=5&pageSize=5)
 
 CREATE TABLE IF NOT EXISTS public.streaming_data
 (
@@ -42,7 +42,7 @@ ALTER TABLE IF EXISTS public.streaming_data
 
 
 --
--- 0.3. Creation of the materialized views 
+-- 0.3. Creating the materialized views 
 -- Here we're going to create materialized views in order to easily use them as temporary tables in our analysis. 
 
 --
