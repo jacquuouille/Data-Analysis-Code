@@ -149,7 +149,6 @@ from (
 ) a
 order by 
 	4 desc
-
 -- More than 50% of bookings are Advance Tickets (55,5%) and almost 30% of tickets booked are Off-Peak, which means than most of the tickets have been purchased by Railcard Holders (83,1% vs. 16,9% for non-holders)
 -- Each day, on average 138 Advance tickets are being booked, 72 Off-Set ones and 58 Anything ones.
 
@@ -181,7 +180,8 @@ order by
 	1, 2
 -- a. There appears to be a peak in Advance Tickets bookings In February 2024, suggesting at a glance a potential promotion period for this ticket type.
 -- Interestingly, bookings keeps decreasing over the month, while the overall number of trips booked within this period for the following month remains stable.
--- Since the price of an Advance Ticket had remained consistent during this time, we may assume that the goal of such of a promotion is to encourage earlier booking, which have cannibalized bookings for Off-Peak and Anytime tickets.
+-- Since the average ticket price had remained consistent during this time, we may assume that the goal of such of a promotion is to encourage earlier booking 
+-- (see ad-hoc analysis)	
 
 -- b. It looks like the booking of Off-Peak tickets are seasonal 
 
@@ -209,10 +209,8 @@ group by
 	1 
 order by 
 	1 
--- It looks like the average price of a ticket slightly decreased during that period, especially for tickets booked by passengers that do not hold the National Railcard.
--- Was it a promotional period for non-holders of the National Card? 
-
--- >> what's the % of bookings per type of passengers? (Railcard holders)
+-- It looks like the average ticket price has slightly decreased during that period, which have may be due to lower bookings in that time.
+-- Was it a promotional period for non-holders of the National Card?
 
 
 ----
@@ -242,7 +240,7 @@ group by
 	1, 2
 order by 
 	1, 2
--- It looks like the booking of Off-Peak tickets are seasonal, with high volume of tickets booked on weekends (Saturday, Weekday)  
+-- It looks like the booking of Off-Peak tickets are seasonal, with high volume of tickets booked on weekends (Friday, Saturday, Sunday)  
 -- There is a peak in Off-Peak ticket 2024-03-23, looks pretty isolated phenomenon 
  
 
@@ -543,110 +541,3 @@ group by
 	1
 order by 
 	1
-
-
--- 
--- 1.14. 
-CREATE MATERIALIZED VIEW railway_tickets
-AS
-with 
-departure_cities as ( 
-	select 
-		distinct departure_station  
-		, case 
-			when departure_station like '%Birmingham%' then 'Birmingham'
-			when departure_station like '%Bristol%' then 'Bristol'
-			when departure_station like '%Edinburgh%' then 'Edinburgh'
-			when departure_station like '%Liverpool%' then 'Liverpool'
-			when departure_station like '%London%' then 'London'
-			when departure_station like '%Manchester%' then 'Manchester'
-			when departure_station like '%Reading%' then 'Reading'
-			else departure_station 
-			end as city_departure
-	from 
-		railway 
-)
-, arrival_cities as ( 
-	select 
-		distinct arrival_destination  
-		, case 
-			when arrival_destination like '%Birmingham%' then 'Birmingham'
-			when arrival_destination like '%Bristol%' then 'Bristol' 
-			when arrival_destination like '%Cardiff%' then 'Cardiff'  
-			when arrival_destination like '%Edinburgh%' then 'Edinburgh'
-			when arrival_destination like '%Liverpool%' then 'Liverpool'
-			when arrival_destination like '%London%' then 'London'
-			when arrival_destination like '%Manchester%' then 'Manchester' 
-			when arrival_destination like '%Reading%' then 'Reading'
-			else arrival_destination 
-			end as city_arrival
-	from
-		railway 
-)	
-, departure_city_geo as ( 
-	select 
-		distinct t1.departure_station
-		, t1.city_departure
-		, t2.latitude as latitude_departure
-		, t2.longitude as longitude_departure
-	from 
-		departure_cities t1 
-	left join 
-		city_dataset t2 
-		on t1.city_departure = t2.city
-)
-, arrival_city_geo as ( 
-	select 
-		distinct t1.arrival_destination
-		, t1.city_arrival
-		, t2.latitude as latitude_arrival
-		, t2.longitude as longitude_arrival
-	from 
-		arrival_cities t1 
-	left join 
-		city_dataset t2 
-		on t1.city_arrival = t2.city
-)
-	select 
-		t1.transaction_id
-		, t1.purchase_date
-		, t1.purchase_time
-		, t1.purchase_type
-		, t1.payment_method
-		, t1.railcard
-		, t1.ticket_class
-		, t1.ticket_type
-		, t1.price
-		, t1.departure_station
-		, t2.city_departure
-		, t2.latitude_departure
-		, t2.longitude_departure
-		, t1.arrival_destination
-		, t3.city_arrival
-		, t3.latitude_arrival
-		, t3.longitude_arrival
-		, t1.journey_date 
-		, t1.departure_time
-		, t1.arrival_time 
-		, t1.actual_arrival_time
-		, case 
-			when t1.journey_status = 'Cancelled' and t1.actual_arrival_time = '00:00:00' then null 
-			else t1.actual_arrival_time 
-			end 
-		  as actual_real_arrival_time 
-		, t1.journey_status 
-		, t1.delay_reason 
-		, t1.refund_request 
-	from 
-		railway t1
-	left join 
-		departure_city_geo t2 
-		on t1.departure_station = t2.departure_station
-	left join 
-		arrival_city_geo t3 
-		on t1.arrival_destination = t3.arrival_destination
-order by 
-	1
-WITH NO DATA;
-
-REFRESH MATERIALIZED VIEW railway_tickets
