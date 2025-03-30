@@ -22,7 +22,7 @@
 ---------------
 
 --
--- 0. Creating the master table, based on the railway data table (imported via the Python script), and 1 external dataset 'city_arrival' (geolocalisation points details). 
+-- 0. Creating the master table, from the railway data table (imported via the Python script), and 1 external dataset 'city_arrival' (geolocalisation points details). 
 
 CREATE MATERIALIZED VIEW railway_tickets
 AS
