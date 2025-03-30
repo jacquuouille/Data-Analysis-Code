@@ -133,7 +133,7 @@ REFRESH MATERIALIZED VIEW railway_tickets
 with 
 railway_bookings as ( 
 	select 
-		distinct ticket_type    
+		ticket_type    
 		, count(distinct transaction_id) as bookings  -- 1 row = 1 booking (count(*) = count(distinct transaction_id))
 		, count(distinct transaction_id) / count(distinct purchase_date) as avg_daily_bookings
 	from
@@ -143,7 +143,9 @@ railway_bookings as (
 )
 select 
 	* 
-	, round(100.0*sum(bookings) over(partition by ticket_type) / sum(bookings) over(), 1) as prop_bookings
+	, round(
+		100.0*sum(bookings) over(partition by ticket_type) / sum(bookings) over(), 1
+	  ) as prop_bookings
 from 
 	railway_bookings
 	
@@ -157,7 +159,7 @@ order by
 ----
 -- 1.2. Bookings per Ticket Type over time 
 select 
-	distinct ticket_type   
+	ticket_type   
 	, purchase_date
 	, sum(count(transaction_id)) over(partition by ticket_type, purchase_date) as bookings -- 1 row = 1 booking (count(*) = count(distinct transaction_id))
 	, sum(count(transaction_id)) over(order by purchase_date rows between unbounded preceding and current row) as running_bookings
@@ -179,7 +181,9 @@ order by
 -- 1.3. Average Ticket Price over time: is that a promotion period?  
 select 
 	purchase_date 
-	, round(avg(price), 1) as avg_price
+	, round(
+		avg(price), 1
+	  ) as avg_price
 from
 	railway_bookings
 group by 
@@ -213,7 +217,9 @@ order by
 select 
 	distinct purchase_type    
 	, count(transaction_id) over(partition by purchase_type) as revenue
-	, round(100.0*count(transaction_id) over(partition by purchase_type) / count(transaction_id) over(), 1) as prop_revenue
+	, round(
+		100.0*count(transaction_id) over(partition by purchase_type) / count(transaction_id) over(), 1
+	  ) as prop_revenue
 from
 	railway_bookings 
 order by 
@@ -227,9 +233,13 @@ with
 booking_metrics as ( 
 	select 
 		distinct days_in_advance 
-		, round(avg(price) over(partition by days_in_advance), 1) as avg_price
+		, round(
+			avg(price) over(partition by days_in_advance), 1
+		  ) as avg_price
 		, count(transaction_id) over(partition by days_in_advance) as bookings -- 1 row = 1 booking (count(*) = count(distinct transaction_id))
-		, round(100.0*count(transaction_id) over(partition by days_in_advance) / count(transaction_id) over(), 1) as prop_bookings
+		, round(
+			100.0*count(transaction_id) over(partition by days_in_advance) / count(transaction_id) over(), 1
+		  ) as prop_bookings
 	from ( 
 		select 
 			* 
@@ -320,7 +330,9 @@ select
 	distinct journey_status
 	, delay_reason 
 	, count(*) over(partition by journey_status, delay_reason) as freq -- 1 row = 1 booking (count(*) = count(distinct transaction_id))
-	, round(100.0*count(*) over(partition by journey_status, delay_reason) / count(*) over(partition by journey_status), 1) as prop_reason
+	, round(
+		100.0*count(*) over(partition by journey_status, delay_reason) / count(*) over(partition by journey_status), 1
+	  ) as prop_reason
 from
 	railway_bookings 
 where
@@ -359,7 +371,9 @@ delay_categories as (
 ) 
 select 
 	distinct * 
-	, round(100.0*sum(delayed_trains) over(partition by delay_cat) / sum(delayed_trains) over(), 1) as prop
+	, round(
+		100.0*sum(delayed_trains) over(partition by delay_cat) / sum(delayed_trains) over(), 1
+	  ) as prop
 from 
 	delay_categories
 order by 
@@ -372,7 +386,9 @@ select
 	distinct journey_status 
 	, refund_request 
 	, count(*) over(partition by journey_status, refund_request) as freq
-	, round(100.0*count(*) over(partition by journey_status, refund_request) / count(*) over(partition by journey_status), 1) as prop
+	, round(
+		100.0*count(*) over(partition by journey_status, refund_request) / count(*) over(partition by journey_status), 1
+	  ) as prop
 from
 	railway_bookings
 where 
