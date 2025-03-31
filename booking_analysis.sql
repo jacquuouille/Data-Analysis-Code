@@ -131,7 +131,7 @@ REFRESH MATERIALIZED VIEW railway_tickets
 ----
 -- 1.1. Bookings Statistics per Ticket Type
 with 
-railway_bookings as ( 
+bookings as ( 
 	select 
 		ticket_type    
 		, count(distinct transaction_id) as bookings  -- 1 row = 1 booking (count(*) = count(distinct transaction_id))
@@ -147,12 +147,10 @@ select
 		100.0*sum(bookings) over(partition by ticket_type) / sum(bookings) over(), 1
 	  ) as prop_bookings
 from 
-	railway_bookings
-	
-) a
+	bookings 
 order by 
 	4 desc
--- More than 50% of bookings are Advance Tickets (55,5%) and almost 30% of tickets booked are Off-Peak, which means than most of the tickets have been purchased by Railcard Holders (83,1% vs. 16,9% for non-holders)
+-- More than 50% of all bookings are for Advance Tickets (55,5%), while nearly 30% of tickets booked are for Off-Peak. Anytime tickets are primarily purchased by customers without Railcard; in other words, which means that the majority of ticketd (83.1%) have been bought by Railcard holders, copmpared to just 16.9% by non-holders.
 -- Each day, on average 138 Advance tickets are being booked, 72 Off-Set ones and 58 Anything ones.
 
 
@@ -190,7 +188,7 @@ group by
 	1 
 order by 
 	1 
--- It looks like the average ticket price has slightly decreased during that period, which have may be due to lower bookings in that time.
+-- It looks like the average ticket price has slightly decreased during that period, which may be due to lower bookings in that time.
 -- Was it a promotional period for non-holders of the National Card?
 
 
@@ -320,7 +318,7 @@ order by
 	1 
 -- The booking pattern differs according to the ticket type:
 -- a. Advance Tickets: tickets mostly purchased during the morning between 8am and 9am, as well as the end of the day between 5pm and 8pm, regardless it's during the week or weekend
--- b. Off-Peaks: tickets mostly purchased during the weekend, early in the morning (5am -7am), and in the afternoon (2pm-6pm)
+-- b. Off-Peaks: tickets mostly got purchased during the weekend, early in the morning (5am -7am), and in the afternoon (2pm-6pm)
 -- c. Anytime Tickets: barely booked on weekends, probably for works during office hours
 
 
@@ -359,8 +357,8 @@ delay_categories as (
 		select 
 			distinct transaction_id  
 			, arrival_time 
-			, actual_real_arrival_time
-			, actual_real_arrival_time - arrival_time as delayed
+			, actual_arrival_time
+			, actual_arrival_time - arrival_time as delayed
 		from
 			railway_bookings 
 		where
