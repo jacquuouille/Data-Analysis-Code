@@ -4,6 +4,7 @@
    -- 2. Creating the master table for customer sentiment 
 
 
+
 ---------------
 -- 1. CUSTOMER EXPERIENCE MASTER TABLE  
 ---------------
@@ -46,6 +47,7 @@ AS
   order by 
   	1, 2
 WITH NO DATA;
+
 
 
 ---------------
