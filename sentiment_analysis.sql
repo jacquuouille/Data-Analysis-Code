@@ -1,7 +1,7 @@
 -- Sentiment Analysis - SQL Code 
 -- Summary: 
-   -- 1. Creating the master table for customer experience (PostgreSQL)
-   -- 2. Creating the master table for customer sentiment (Python + PostgreSQL (Materialized View))
+   -- 1. Creating the master table for customer experience  
+   -- 2. Creating the master table for customer sentiment 
 
 
 ---------------
@@ -51,8 +51,8 @@ WITH NO DATA;
 ---------------
 -- 2. CUSTOMER SENTIMENT MASTER TABLE  
 ---------------
+-- Using the customer_sentiment dataset created in Python (see "sentiment_analysis.py" Python script)
 
--- 2.2. Creation of the Materialized View 
 CREATE MATERIALIZED VIEW sentiment_analysis
 AS
   select 
