@@ -51,7 +51,7 @@ WITH NO DATA;
 ---------------
 -- 2. CUSTOMER SENTIMENT MASTER TABLE  
 ---------------
--- Using the customer_sentiment dataset created in Python (see "sentiment_analysis.py" Python script)
+-- Using the 'customer_sentiment' dataset created in Python (see "sentiment_analysis.py" Python script)
 
 CREATE MATERIALIZED VIEW sentiment_analysis
 AS
