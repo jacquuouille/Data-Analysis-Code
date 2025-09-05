@@ -4,6 +4,7 @@
    # 1. Creating the 'customer sentiment' table via Python libraries for sentiment analysis 
 
 
+
 ##
 # 0. DATA CONNECTION
 ##
@@ -82,6 +83,7 @@ finally:
         cursor.close()
         conn.close()
         print("Database connection closed")
+
 
 
 ##
