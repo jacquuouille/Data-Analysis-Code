@@ -1,4 +1,4 @@
--- Sentiment Analysis - SQL Code 
+-- Sentiment Analysis - SQL Code (PostgreSQL)
 -- Summary: 
    -- 1. Creating the master table for customer experience  
    -- 2. Creating the master table for customer sentiment 
